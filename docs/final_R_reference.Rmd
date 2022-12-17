@@ -2,7 +2,7 @@
 title: "Adri's Final Project"
 subtitle: "ECO602 Fall 2022"
 author: "Adri Grow"
-date: "12/21/2022"
+date: "12/17/2022"
 output: html_document
 ---
 [Final Project: Index](index.html)
@@ -14,8 +14,34 @@ knitr::opts_chunk$set(echo = TRUE)
 # R Reference Guide {.tabset .tabset-pills}
 
 
-## Sample Code Example
+## Loading Data and Packages
+To load the palmer penguins dataset, you must load it into your R workspace. 
 
+* `library()` and `require()` are both functions which ensure the package is installed and can be used
+
+```{r, message = FALSE}
+# Load and require the here package
+library(here)
+require(here)
+# Load and require the palmerpenguins package
+library(palmerpenguins)
+require(palmerpenguins)
+# Load the penguin data from the palmerpenguins package into a data frame called penguins
+penguins <- palmerpenguins::penguins
+```
+
+To load a dataset into R, we'll use the `here()` and `read.csv()` functions. 
+
+* `here()` tells R where we want to access the files from on the physical computer
+
+* `read.csv()` transforms the raw data file into an R `data.frame` of columns and rows
+
+* we'll use the `<-` assignment operator to name our data to a `data.frame` called `ginkgo`
+```{r}
+ginkgo <- read.csv(here("./docs/ginkgo_data_2022.csv"))
+```
+
+## Data structures
 The function `c()` combines or concatenates its arguments into a vector (a 1-dimensional data structure consisting of 1 or more elements).
 
 All of the elements must be of the same type.
@@ -42,22 +68,211 @@ num_vec
 print(char_vec)
 ```
 
-## Loading Data and Packages
+The function `length()` can report of set the length of a vector (or a factor or other R objects). I can find the length of the vectors we made above with the `length()` function:
+```{r}
+length(num_vec)
+length(char_vec)
+```
 
+The function `matrix()` creates a matrix of values provided. I've made a matrix with the numbers 1-10 in a single column saved in the `data.frame` called `matrix1`
+```{r}
+matrix1 <- matrix(1:10, nrow = 10)
+print(matrix1)
+```
 
-## Data structures
+The function `data.frame` creates a data frame of variables organized in columns and rows. This is the most basic R structure used.
+
+*Inside the `data.frame()` function, I'm assigning values (contents of rows) to column names
+```{r}
+protists <- data.frame(
+  Cell = c(1:5),
+  Organism = c("Foram", "Ciliate", "Testate Amoeba", "Diatom", "Slime mold"),
+  Typically_shelled = c("yes", "no", "yes", "yes", "no"),
+  Cute = c("yes", "yes", "yes", "yes", "yes")
+)
+print(protists)
+```
+
+Using the Ginkgo 2022 that we loaded above, we can use the `nrow()`, `ncol()`, and `dim()` functions to get information about the data.
+
+* `nrow()` gives the number of rows in the data frame
+
+* `ncol()` gives the number of columns in the data frame
+
+* `dim()` gives the dimensions of the data frame object
+```{r}
+nrow(ginkgo)
+ncol(ginkgo)
+dim(ginkgo)
+```
 
 ## Subsetting
+I will use the `ginkgo` data frame to show an example of how we can extract a specific column of the data (called subsetting). I'm saving the subsetted data into a new data frame called `ginkgo_seeds`
+```{r}
+ginkgo_seeds <- data.frame(ginkgo$seeds_present)
+```
+I can also subset the data frame to target a specfic range of data. In the next three examples, I will select the first row, the element in row 2, column 3, and then the third column
+
+```{r}
+ginkgo_1st_row <- data.frame(ginkgo[1,])
+print(ginkgo_1st_row)
+
+ginkgo_row2col3 <- data.frame(ginkgo[2,3])
+print(ginkgo_row2col3)
+
+ginkgo_3rd_col <- data.frame(ginkgo[3])
+head(ginkgo_3rd_col)
+```
+Note: I used the `head()` function to view the first few rows of the `ginkgo_3rd_col` data frame (rather than printing the entire column with 220 rows)
+
+Next, I'll use the `subset()` function to select all the Adelie penguin data from the penguins data frame we created earlier with the palmerpenguins package.
+
+* `subset()` returns the data that meets the specified conditions
+
+I'm using `==` to specify that I only want the data for species that are Adelie penguins.
+
+```{r}
+Adelie_penguins <- subset(penguins, species=="Adelie")
+head(Adelie_penguins)
+```
 
 ## Numerical Data Exploration
+Next I'll use the `summary()`, `mean()`, and `sd()` functions to get some descriptive statistics for the ginkgo dataset. I'm specifically interested in the maximum width of the ginkgo leaves variable.
+
+* `summary()` provides a summary of the data specified, for numeric variables this includes the minimum, median, mean, maximum
+
+* `mean()` calculates the mean for the data specified
+
+* `sd()` calculates the standard deviation for the data specified
+
+```{r}
+summary(ginkgo$max_width)
+mean(ginkgo$max_width)
+sd(ginkgo$max_width)
+```
 
 ## Graphical Data Exploration
+I will create a scatterplot of the ginkgo data. I'm interested in looking at the relationship between maximum leaf depth and maximum leaf width
+
+* the `plot()` function is used to make a scatterplot
+
+* `col=` change the color of the points (color name must be in quotes)
+
+* `pch=` change the shape of the points
+
+* `cex=` change the size of the points
+
+* `main=` add a title to the plot
+
+* `xlab=` add an x-axis label
+
+* `ylab=` add a y-axis label
+
+* `xlim=` set the x-axis coordinates
+
+* `ylim=` set the y-axis coordinates
+
+```{r}
+plot(ginkgo$max_depth, ginkgo$max_width, 
+     col="darkgreen", 
+     pch = 8, 
+     cex = 1, 
+     main = "Ginkgo leaves: maximum depth x maximum width", 
+     xlab = "Maximum Leaf Depth (mm)", 
+     ylab = "Maximum leaf width (mm)", 
+     xlim=c(0,125), 
+     ylim=c(0,150))
+```
+
+I will create a histogram next with the palmer penguin data, specifically looking at the flipper lengths.
+
+* the `hist()` function is used to make a historgram
+
+* the `breaks()` functions is used to specify the number of bins you want the data separated into
+
+```{r}
+hist(penguins$flipper_length_mm, breaks = 30, xlab="Flipper length (mm)", main="Histogram of penguin flipper length")
+```
+
+I will create a simple boxplot next with the ginkgo data, to specifically visualize the ginkgo petiole length.
+
+* the `boxplot()` function is used to make a boxplot
+
+```{r}
+boxplot(ginkgo$petiole_length, ylab = "Petiole length (mm)", main = "Ginkgo simple boxplot")
+```
+
+Next, I'll make a conditional boxplot so that we can visualize a numerical variable (`max_width`) against a nominal variable (`seeds_present`).
+
+```{r}
+boxplot(max_width ~ seeds_present, data = ginkgo, main = "Ginkgo conditional boxplot", xlab = "Seeds", ylab = "Maximum width (mm)")
+```
+
+Finally, I'll make a panel of histograms so that we can visualize many plots of the ginkgo data at once.
+
+* the `par()` function is used to set graphical parameters. In our case we want a 2x2 grid and will use the `mfrow()` function argument to specify 2 columns and 2 rows
+
+```{r}
+par(mfrow=c(2,2))
+hist(ginkgo$max_width, xlab = "Maximum width (mm)", main = "Ginkgo leaf width")
+hist(ginkgo$max_depth, xlab = "Maximum depth (mm)", main = "Ginkgo leaf depth")
+hist(ginkgo$notch_depth, xlab = "Notch depth (mm)", main = "Ginkgo leaf notch")
+hist(ginkgo$petiole_length, xlab = "Petiole length (mm)", main = "Ginkgo leaf petiole")
+```
 
 ## Distribution Functions
 
+I'll next show examples for six different distribution functions.
 
+The three normal distribution functions are:
 
+* `dnorm()` provides the density; dnorm(x, mean, sd) 
 
+  * use this if you want to know if a specific value is more likely
 
+* `pnorm()` provides the distribution function; pnorm(q, mean, sd)
 
+  * use this if you want to know the probability of a value within a specified range
+
+* `qnorm()` provides the quantile function; qnorm(p, mean, sd)
+
+  * use this if you want to ask about a certain percentile
+
+```{r}
+# What is the value of the standard normal distribution at x=1 with a normally-distributed population with mean = 3 and standard deviation = 1.7
+dnorm(1, 3, 1.7)
+
+# What is the probability of observing a value of less than 1.5 from a normally-distributed population with mean = 3 and standard deviation = 1.7?
+pnorm(1.5, 3, 1.7)
+
+# find the 95th percentile of the standard normal distribution
+qnorm(.95, 3, 1.7)
+```
+
+The three binomial distribution functions are:
+
+* `dbinom()` provides the probability mass function; dbinom(x, size, prob) 
+
+  * use this if you want to know the probability of getting a value of exactly `x`
+
+* `pbinom()` provides the cumulative mass function; pbinom(q, size, prob) 
+
+  * use this if you want to know the probability of getting a value of `x` or less or more
+
+* `qbinom()` provides the quantile function; qbinom(q, size, prob)
+
+  * use this if you want to ask about a certain percentile
+
+```{r}
+# Adri makes 70% of their free-throw attempts. If they shoot 15 free throws, what is the probability that they makes exactly 10?
+# we want to find the probability of 10 successes during 15 trials where the probability of success on each trial is 0.7
+dbinom(10, 15, 0.7)
+
+# Jailene flips a coin 10 times. What is the probability that the coin lands on heads more than 5 times?
+# we want to find the probability of more than 5 successes during 10 trials where the probability of success on each trial is 0.5
+pbinom(5, size=10, prob=.5, lower.tail=FALSE)
+
+# we want to find the 90th percentile of a binomial distribution with 50 trials and probability of success for each trial is 0.50
+qbinom(.90, size=50, prob=.50)
+```
 

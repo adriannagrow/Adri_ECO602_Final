@@ -1,0 +1,282 @@
+---
+title: "Adri's Final Project"
+subtitle: "ECO602 Fall 2022"
+author: "Adri Grow"
+date: "12/17/2022"
+output: html_document
+---
+[Final Project: Index](index.html)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE}
+library(here)
+require(here)
+```
+
+# Delomys Data Analysis {.tabset .tabset-pills}
+
+## Numerical Exploration
+```{r, echo=FALSE, message=FALSE}
+delomys <- read.csv(here("./docs/delomys.csv"))
+summary(delomys$body_mass)
+summary(delomys$body_length)
+shapiro.test(delomys$body_mass)
+shapiro.test(delomys$body_length)
+```
+
+## Graphical Exploration Q1-4
+```{r, echo=FALSE}
+#Scatterplot
+plot(delomys$body_mass, delomys$body_length, main = "Delomys body mass x body length",
+     xlab = "Body Mass (g)", ylab = "Body Length (mm)")
+#histogram
+hist(delomys$body_mass, main = "Delomys body mass", xlab = "Body Mass (g)")
+hist(delomys$body_length, main = "Delomys body length", xlab = "Body Length (mm)")
+#conditional boxplot
+boxplot(body_mass ~ binomial, data = delomys, ylab = "Body Mass (g)", xlab = "Species", main = "Delomys body mass by species")
+boxplot(body_mass ~ sex, data = delomys, ylab = "Body Mass (g)", xlab = "Sex", main = "Delomys body mass by sex")
+boxplot(body_mass ~ sex + binomial, data = delomys, ylab = "Body Mass (g)", xlab = "", main = "Delomys body mass by species and sex", names = c("Female \nD. dorsalis", "Male \nD. dorsalis", "Female \nD. sublineatus", "Male \nD. sublineatus"))
+```
+
+
+
+**Q1 (2 pts.): Qualitatively describe the relationship between body mass and length. Does the relationship seem linear, curved, nonexistent?**
+
+The relationship is curved. Body mass and body length increase linearly to begin with, and then at a certain point as body mass increases body length begins to stay more constant. This suggests that a Delomys can have different mass but there is typically a point at which length becomes consistent, most likely among adult Delomys.
+  
+**Q2 (2 pts.): Qualitatively describe the shapes of the histograms. Do the data appear normally-distributed? Explain why or why not. Explain why we care (or not) whether the data are normally distributed.**
+
+Both of the histograms appear to be skewed, which is more apparent in the Delomys body length histogram. The Delomys body mass histogram looks normally distributed since there is a nice bell-shape to the distribution. The Delomys body length does not look normally distributed, there seems to be a right-skew to the distribution and also some outliers at the top end of body length. We care if the data are normally distributed or not because there are different statistical tests and calculations that make assumptions about the data. Knowing whether your own data are or are not normally distributed helps when deciding which tests and models are applicable.
+
+**Q3 (2 pts.): Using both the histograms and normality tests, do you think the (unconditioned) body masses and body length are normally-distributed? Make sure you contrast your visual assessment of normality to the results of the numerical normality tests.**
+
+The Shapiro test for both body mass and length resulted in a significant (<0.05) p-value, meaning that these data are not normally distributed. For the body mass histogram, this is a different outcome than from my visual inspection in which I thought that the data were normally distributed. The body length histogram is not normally distributed which aligns with my visual inspection of the histogram.
+
+**Q4 (2 pts.): Examine the three conditional boxplots.Describe any graphical evidence you see for body mass differences based on species and/or sex.**
+
+The median body mass for Delomys dorsalis is slightly higher than the median body mass for Delomys sublineatus. However, this is not substantial. For both species of Delomys, the males have a slightly higher median body mass compared to the females. Again, this is not substantially different. D. dorsalis body mass median for both sexes is higher than the median for D. sublineatus. We can also see that the males for each species have a slightly higher median value for body mass. Again, the boxplots and median do not fall substantially in different ranges on the plots so I am not drawing any robust conclusions.
+
+## Model Building
+*Model 1: simple linear regression*
+```{r, echo=FALSE, message=FALSE}
+fit1 = lm(body_length ~ body_mass, data = delomys)
+summary(fit1)
+```
+*Model 2: 1-way ANOVA*
+```{r, echo=FALSE, message=FALSE}
+fit2 = lm(body_mass ~ sex, data = delomys)
+summary(fit2)
+anova(fit2)
+```
+*Model 3: 1-way ANOVA*
+```{r, echo=FALSE, message=FALSE}
+fit3 = lm(body_mass ~ binomial, data = delomys)
+summary(fit3)
+anova(fit3)
+```
+*Model 4: 2-way additive ANOVA*
+```{r, echo=FALSE, message=FALSE}
+fit4 = lm(body_mass ~ sex + binomial, data = delomys)
+summary(fit4)
+anova(fit4)
+```
+*Model 5: 2-way factorial ANOVA*
+```{r, echo=FALSE, message=FALSE}
+fit5 = lm(body_mass ~ sex * binomial, data = delomys)
+summary(fit5)
+anova(fit5)
+```
+
+## Model Diagnostics Q5-6
+```{r, echo=FALSE, message=FALSE}
+res1 <- residuals(fit1)
+hist(res1, main="Model 1: simple linear regression", xlab="Residuals Model 1")
+shapiro.test(res1)
+```
+
+```{r, echo=FALSE, message=FALSE}
+res2 <- residuals(fit2)
+hist(res2, main="Model 2: 1-way ANOVA", xlab="Residuals Model 2")
+shapiro.test(res2)
+```
+
+```{r, echo=FALSE, message=FALSE}
+res3 <- residuals(fit3)
+hist(res3, main="Model 3: 1-way ANOVA", xlab="Residuals Model 3")
+shapiro.test(res3)
+```
+
+```{r, echo=FALSE, message=FALSE}
+res4 <- residuals(fit4)
+hist(res4, main="Model 4: 2-way additive ANOVA", xlab="Residuals Model 4")
+shapiro.test(res4)
+```
+
+```{r, echo=FALSE, message=FALSE}
+res5 <- residuals(fit5)
+hist(res5, main="Model 5: 2-way factorial ANOVA", xlab="Residuals Model 5")
+shapiro.test(res5)
+```
+
+**Q5 (2 pts.): What do you conclude about residual normality based on the numerical and graphical diagnostics?**
+
+The simple linear regression histogram appears to be not normally distributed, while the histogram for the remaining four models look to be normally distributed. The results of the Shapiro test for all these models have significant p-values (<0.05) and therefore are not normally distributed. The residuals for each of these models are not normally distributed.
+
+**Q6 (1 pt.): Are violations of the normality assumption equally severe for all the models?**
+
+No, violations of normality are not equally severe for all the models given that they are different. ANOVA are better at dealing with non-normal data for example.
+
+## Model Interpretation Q7-18
+```{r, echo=FALSE, message=FALSE}
+knitr::kable(coef(summary(fit1)), digits=2)
+```
+
+**Q7 (2 pts.): What is the magnitude of the mass/length relationship?**
+
+There is a weak relationship between body mass and length since the estimate for body mass is a small number (0.88).
+
+**Q8 (2 pts.): What is the expected body length of an animal that weighs 100g?**
+
+164.12
+
+**Q9 (2 pts.): What is the expected body length of an animal that weighs 0g?**
+
+76.12
+
+```{r, echo=FALSE, message=FALSE}
+knitr::kable(coef(summary(fit2)), digits=2)
+knitr::kable(coef(summary(fit3)), digits=2)
+knitr::kable(coef(summary(fit4)), digits=2)
+knitr::kable(coef(summary(fit5)), digits=2)
+```
+
+**Q10 (1 pt.): What is the base level for sex?**
+
+sexfemale
+
+**Q11 (1 pt.): What is the base level for binomial?**
+
+binomialDelomys dorsalis
+
+**Q12 (1 pt.): Which sex is heavier? How do you know?**
+
+Males are heavier because the estimate for the males is a positive value (this would be added to the basecase sexfemale estimate).
+
+**Q13 (1 pt.): Which species is heavier? How do you know?**
+
+Delomys dorsalis is heavier because the estimate for the Delomys sublineatus is a negative value (this would be subtracted from the basecase binomialDelomys dorsalis).
+
+```{r, echo=FALSE, message=FALSE}
+knitr::kable(anova(fit2), digits = 30)
+knitr::kable(anova(fit3), digits = 30)
+knitr::kable(anova(fit4), digits = 30)
+knitr::kable(anova(fit5), digits = 30)
+```
+
+**Q14 (1 pt.): Are sex and species significant predictors for body mass?**
+
+No, an ANOVA does not tell us whether our variables sex or species are significant *predictors* for body mass.
+
+**Q15 (1 pt.): Is there a significant interaction?**
+
+Yes, there is a significant interaction between sex and body mass as well as species and body mass given that the p-values are so small (<0.05).
+
+**Q16 (2 pts.): Examine the p-values for the main effects (sex and species) in all four of the ANOVA tables. Does the significance level of either main effect change very much among the different models?**
+
+It does not change very much, the p-values are extremely small between the four models. Given that the p-values are so incredibly small for the main effects, it doesn't seem like it would be something to note.
+
+
+
+```{r, echo=FALSE, message=FALSE}
+AIC(fit2)
+AIC(fit3)
+AIC(fit4)
+AIC(fit5)
+```
+
+
+**Q17 (1 pt.): Which two models have the lowest AIC?**
+
+Model 4 (2-way additive ANOVA) and Model 5 (2-way factorial ANOVA) have the two lowest AIC values.
+
+**Q18 (4 pts.): Which of the two models with lowest AIC scores would you select? Explain your decision based on model fit and the complexity/understanding tradeoff.**
+
+I would choose Model 4, the 2-way additive ANOVA. The first reason is because it has the smallest AIC out of all the models we've created here. This model fits the data best out of all the options and therefore uses the fewest parameters as well. The other lowest AIC option is Model 5, the 2-way factorial ANOVA. This factorial model takes into account the interaction and dependence of the two independent variables, thus making this model more complex and difficult to interpret. In the case of the additive model, we are evaluating each of the independent variables on our dependent variable, making this model a bit more intuitive and less complex.
+
+## All questions answered in one place!
+
+**Q1 (2 pts.): Qualitatively describe the relationship between body mass and length. Does the relationship seem linear, curved, nonexistent?**
+
+The relationship is curved. Body mass and body length increase linearly to begin with, and then at a certain point as body mass increases body length begins to stay more constant. This suggests that a Delomys can have different mass but there is typically a point at which length becomes consistent, most likely among adult Delomys.
+  
+**Q2 (2 pts.): Qualitatively describe the shapes of the histograms. Do the data appear normally-distributed? Explain why or why not. Explain why we care (or not) whether the data are normally distributed.**
+
+Both of the histograms appear to be skewed, which is more apparent in the Delomys body length histogram. The Delomys body mass histogram looks normally distributed since there is a nice bell-shape to the distribution. The Delomys body length does not look normally distributed, there seems to be a right-skew to the distribution and also some outliers at the top end of body length. We care if the data are normally distributed or not because there are different statistical tests and calculations that make assumptions about the data. Knowing whether your own data are or are not normally distributed helps when deciding which tests and models are applicable.
+
+**Q3 (2 pts.): Using both the histograms and normality tests, do you think the (unconditioned) body masses and body length are normally-distributed? Make sure you contrast your visual assessment of normality to the results of the numerical normality tests.**
+
+The Shapiro test for both body mass and length resulted in a significant (<0.05) p-value, meaning that these data are not normally distributed. For the body mass histogram, this is a different outcome than from my visual inspection in which I thought that the data were normally distributed. The body length histogram is not normally distributed which aligns with my visual inspection of the histogram.
+
+**Q4 (2 pts.): Examine the three conditional boxplots.Describe any graphical evidence you see for body mass differences based on species and/or sex.**
+
+The median body mass for Delomys dorsalis is slightly higher than the median body mass for Delomys sublineatus. However, this is not substantial. For both species of Delomys, the males have a slightly higher median body mass compared to the females. Again, this is not substantially different. D. dorsalis body mass median for both sexes is higher than the median for D. sublineatus. We can also see that the males for each species have a slightly higher median value for body mass. Again, the boxplots and median do not fall substantially in different ranges on the plots so I am not drawing any robust conclusions.
+
+**Q5 (2 pts.): What do you conclude about residual normality based on the numerical and graphical diagnostics?**
+
+The simple linear regression histogram appears to be not normally distributed, while the histogram for the remaining four models look to be normally distributed. The results of the Shapiro test for all these models have significant p-values (<0.05) and therefore are not normally distributed. The residuals for each of these models are not normally distributed.
+
+**Q6 (1 pt.): Are violations of the normality assumption equally severe for all the models?**
+
+No, violations of normality are not equally severe for all the models given that they are different. ANOVA are better at dealing with non-normal data for example.
+
+**Q7 (2 pts.): What is the magnitude of the mass/length relationship?**
+
+There is a weak relationship between body mass and length since the estimate for body mass is a small number (0.88).
+
+**Q8 (2 pts.): What is the expected body length of an animal that weighs 100g?**
+
+164.12
+
+**Q9 (2 pts.): What is the expected body length of an animal that weighs 0g?**
+
+76.12
+
+**Q10 (1 pt.): What is the base level for sex?**
+
+sexfemale
+
+**Q11 (1 pt.): What is the base level for binomial?**
+
+binomialDelomys dorsalis
+
+**Q12 (1 pt.): Which sex is heavier? How do you know?**
+
+Males are heavier because the estimate for the males is a positive value (this would be added to the basecase sexfemale estimate).
+
+**Q13 (1 pt.): Which species is heavier? How do you know?**
+
+Delomys dorsalis is heavier because the estimate for the Delomys sublineatus is a negative value (this would be subtracted from the basecase binomialDelomys dorsalis).
+
+**Q14 (1 pt.): Are sex and species significant predictors for body mass?**
+
+No, an ANOVA does not tell us whether our variables sex or species are significant *predictors* for body mass.
+
+**Q15 (1 pt.): Is there a significant interaction?**
+
+Yes, there is a significant interaction between sex and body mass as well as species and body mass given that the p-values are so small (<0.05).
+
+**Q16 (2 pts.): Examine the p-values for the main effects (sex and species) in all four of the ANOVA tables. Does the significance level of either main effect change very much among the different models?**
+
+It does not change very much, the p-values are extremely small between the four models. Given that the p-values are so incredibly small for the main effects, it doesn't seem like it would be something to note.
+
+**Q17 (1 pt.): Which two models have the lowest AIC?**
+
+Model 4 (2-way additive ANOVA) and Model 5 (2-way factorial ANOVA) have the two lowest AIC values.
+
+**Q18 (4 pts.): Which of the two models with lowest AIC scores would you select? Explain your decision based on model fit and the complexity/understanding tradeoff.**
+
+I would choose Model 4, the 2-way additive ANOVA. The first reason is because it has the smallest AIC out of all the models we've created here. This model fits the data best out of all the options and therefore uses the fewest parameters as well. The other lowest AIC option is Model 5, the 2-way factorial ANOVA. This factorial model takes into account the interaction and dependence of the two independent variables, thus making this model more complex and difficult to interpret. In the case of the additive model, we are evaluating each of the independent variables on our dependent variable, making this model a bit more intuitive and less complex.
+
